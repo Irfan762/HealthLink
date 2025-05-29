@@ -1,0 +1,1664 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HealthLink - Real-Time Medical Platform</title>
+ <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#00d4aa',
+                        secondary: '#0066cc',
+                        accent: '#ff6b6b'
+                    },
+                    animation: {
+                        'float': 'float 6s ease-in-out infinite',
+                        'pulse-glow': 'pulse-glow 2s ease-in-out infinite',
+                        'slide-up': 'slide-up 0.5s ease-out'
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .glass-effect {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .hover-scale {
+            transition: transform 0.3s ease;
+        }
+        .hover-scale:hover {
+            transform: scale(1.05);
+        }
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .chat-bubble {
+            max-width: 80%;
+            word-wrap: break-word;
+        }
+         @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(0, 212, 170, 0.4); }
+            50% { box-shadow: 0 0 40px rgba(0, 212, 170, 0.8); }
+        }
+        @keyframes slide-up {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .glass {
+            backdrop-filter: blur(16px);
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+         @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(0, 212, 170, 0.4); }
+            50% { box-shadow: 0 0 40px rgba(0, 212, 170, 0.8); }
+        }
+        @keyframes slide-up {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .glass {
+            backdrop-filter: blur(16px);
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg fixed w-full top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 flex items-center">
+                        <i class="fas fa-heartbeat text-red-500 text-2xl mr-2"></i>
+                        <span class="text-xl font-bold text-gray-800">HealthLink</span>
+                    </div>
+                </div>
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="#" onclick="showSection('dashboard')" class="text-gray-700 hover:text-red-500 transition-colors">Dashboard</a>
+                    <a href="#" onclick="showSection('blood-bank')" class="text-gray-700 hover:text-red-500 transition-colors">Blood Banks</a>
+                    <a href="#" onclick="showSection('consultancy')" class="text-gray-700 hover:text-red-500 transition-colors">Consultancy</a>
+                    <a href="#" onclick="showSection('community')" class="text-gray-700 hover:text-red-500 transition-colors">Community</a>
+                    <a href="#" onclick="showSection('emergency')" class="text-gray-700 hover:text-red-500 transition-colors">Emergency</a>
+                    <a href="#" onclick="showSection('Medicine Tracker')" class="text-gray-700 hover:text-red-500 transition-colors">Medicine Tracker</a>
+                    <button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors">Sign In</button>
+                </div>
+                <div class="md:hidden flex items-center">
+                    <button onclick="toggleMobileMenu()" class="text-gray-700">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="hidden md:hidden bg-white border-t">
+            <div class="px-2 pt-2 pb-3 space-y-1">
+                <a href="#" onclick="showSection('dashboard')" class="block px-3 py-2 text-gray-700">Dashboard</a>
+                <a href="#" onclick="showSection('blood-bank')" class="block px-3 py-2 text-gray-700">Blood Banks</a>
+                <a href="#" onclick="showSection('consultancy')" class="block px-3 py-2 text-gray-700">Consultancy</a>
+                <a href="#" onclick="showSection('community')" class="block px-3 py-2 text-gray-700">Community</a>
+                <a href="#" onclick="showSection('emergency')" class="block px-3 py-2 text-gray-700">Emergency</a>
+                <a href="#" onclick="showSection('Medicine Tracker')" class="block px-3 py-2 text-gray-700">Medicine Tracker</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="pt-16">
+        <!-- Dashboard Section -->
+        <section id="dashboard" class="section-content">
+            <!-- Hero Section -->
+            <div class="gradient-bg text-white py-20">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                    <h1 class="text-4xl md:text-6xl font-bold mb-6">
+                        Your Health, Our Priority
+                    </h1>
+                    <p class="text-xl md:text-2xl mb-8 opacity-90">
+                        Real-time blood availability • Medical consultancy • Community support
+                    </p>
+                    <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                        <button onclick="showSection('emergency')" class="bg-red-500 hover:bg-red-600 text-white px-8 py-4 rounded-lg text-lg font-semibold transition-all hover-scale pulse-animation">
+                            <i class="fas fa-exclamation-triangle mr-2"></i>
+                            Emergency Help
+                        </button>
+                        <button onclick="showSection('blood-bank')" class="bg-white text-red-500 hover:bg-gray-100 px-8 py-4 rounded-lg text-lg font-semibold transition-all hover-scale">
+                            <i class="fas fa-tint mr-2"></i>
+                            Find Blood
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+          
+
+            <!-- Features Grid -->
+            <div class="py-16 bg-gray-50">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <h2 class="text-3xl font-bold text-center text-gray-800 mb-12">Platform Features</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        <div class="bg-white p-6 rounded-xl shadow-lg hover-scale">
+                            <div class="bg-red-100 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
+                                <i class="fas fa-tint text-red-500 text-xl"></i>
+                            </div>
+                            <h3 class="text-xl font-semibold mb-3">Live Blood Tracker</h3>
+                            <p class="text-gray-600">Real-time blood availability at nearby banks with geo-based search.</p>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl shadow-lg hover-scale">
+                            <div class="bg-blue-100 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
+                                <i class="fas fa-comments text-blue-500 text-xl"></i>
+                            </div>
+                            <h3 class="text-xl font-semibold mb-3">Direct Chat</h3>
+                            <p class="text-gray-600">Chat directly with blood banks and doctors for instant support.</p>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl shadow-lg hover-scale">
+                            <div class="bg-orange-100 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
+                                <i class="fas fa-exclamation-triangle text-orange-500 text-xl"></i>
+                            </div>
+                            <h3 class="text-xl font-semibold mb-3">Emergency Alerts</h3>
+                            <p class="text-gray-600">Post urgent requests and alert nearby community members.</p>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl shadow-lg hover-scale">
+                            <div class="bg-green-100 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
+                                <i class="fas fa-user-md text-green-500 text-xl"></i>
+                            </div>
+                            <h3 class="text-xl font-semibold mb-3">Health Consultancy</h3>
+                            <p class="text-gray-600">Chat, audio, or video consultations with qualified doctors.</p>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl shadow-lg hover-scale">
+                            <div class="bg-purple-100 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
+                                <i class="fas fa-users text-purple-500 text-xl"></i>
+                            </div>
+                            <h3 class="text-xl font-semibold mb-3">Community Support</h3>
+                            <p class="text-gray-600">Connect with nearby people for help and support during emergencies.</p>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl shadow-lg hover-scale">
+                            <div class="bg-indigo-100 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
+                                <i class="fas fa-phone text-indigo-500 text-xl"></i>
+                            </div>
+                            <h3 class="text-xl font-semibold mb-3">SMS/IVR Support</h3>
+                            <p class="text-gray-600">Non-smartphone users can access services via SMS and IVR calls.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Blood Bank Section -->
+        <section id="blood-bank" class="section-content hidden">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <div class="mb-8">
+                    <h1 class="text-3xl font-bold text-gray-800 mb-4">Blood Bank Tracker</h1>
+                    <div class="bg-white p-6 rounded-lg shadow-lg">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                            <input type="text" placeholder="Enter location" class="border border-gray-300 rounded-lg px-4 py-2 w-full">
+                            <select class="border border-gray-300 rounded-lg px-4 py-2 w-full">
+                                <option>Select Blood Type</option>
+                                <option>A+</option>
+                                <option>A-</option>
+                                <option>B+</option>
+                                <option>B-</option>
+                                <option>O+</option>
+                                <option>O-</option>
+                                <option>AB+</option>
+                                <option>AB-</option>
+                            </select>
+                            <button class="bg-red-500 text-white px-6 py-2 rounded-lg hover:bg-red-600 transition-colors">
+                                <i class="fas fa-search mr-2"></i>Search
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Blood Bank Results -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="bg-white p-6 rounded-lg shadow-lg">
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <h3 class="text-xl font-semibold text-gray-800">City Blood Bank</h3>
+                                <p class="text-gray-600">123 Main St, Pune</p>
+                                <p class="text-sm text-green-600">2.5 km away</p>
+                            </div>
+                            <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">Available</span>
+                        </div>
+                        <div class="grid grid-cols-4 gap-2 mb-4">
+                            <div class="bg-red-50 p-2 rounded text-center">
+                                <div class="text-sm font-semibold text-red-600">A+</div>
+                                <div class="text-xs text-gray-600">15 units</div>
+                            </div>
+                            <div class="bg-red-50 p-2 rounded text-center">
+                                <div class="text-sm font-semibold text-red-600">O+</div>
+                                <div class="text-xs text-gray-600">8 units</div>
+                            </div>
+                            <div class="bg-red-50 p-2 rounded text-center">
+                                <div class="text-sm font-semibold text-red-600">B+</div>
+                                <div class="text-xs text-gray-600">12 units</div>
+                            </div>
+                            <div class="bg-gray-50 p-2 rounded text-center">
+                                <div class="text-sm font-semibold text-gray-400">AB-</div>
+                                <div class="text-xs text-gray-400">0 units</div>
+                            </div>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="openChat('blood-bank', 'City Blood Bank')" class="flex-1 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors">
+                                <i class="fas fa-comments mr-2"></i>Chat
+                            </button>
+                            <button class="flex-1 bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors">
+                                <i class="fas fa-phone mr-2"></i>Call
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-lg shadow-lg">
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <h3 class="text-xl font-semibold text-gray-800">Metro Blood Center</h3>
+                                <p class="text-gray-600">456 Park Ave, Pune</p>
+                                <p class="text-sm text-green-600">3.8 km away</p>
+                            </div>
+                            <span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs">Limited</span>
+                        </div>
+                        <div class="grid grid-cols-4 gap-2 mb-4">
+                            <div class="bg-red-50 p-2 rounded text-center">
+                                <div class="text-sm font-semibold text-red-600">A-</div>
+                                <div class="text-xs text-gray-600">3 units</div>
+                            </div>
+                            <div class="bg-red-50 p-2 rounded text-center">
+                                <div class="text-sm font-semibold text-red-600">O-</div>
+                                <div class="text-xs text-gray-600">2 units</div>
+                            </div>
+                            <div class="bg-red-50 p-2 rounded text-center">
+                                <div class="text-sm font-semibold text-red-600">AB+</div>
+                                <div class="text-xs text-gray-600">5 units</div>
+                            </div>
+                            <div class="bg-gray-50 p-2 rounded text-center">
+                                <div class="text-sm font-semibold text-gray-400">B-</div>
+                                <div class="text-xs text-gray-400">0 units</div>
+                            </div>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="openChat('blood-bank', 'Metro Blood Center')" class="flex-1 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors">
+                                <i class="fas fa-comments mr-2"></i>Chat
+                            </button>
+                            <button class="flex-1 bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors">
+                                <i class="fas fa-phone mr-2"></i>Call
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-lg shadow-lg">
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <h3 class="text-xl font-semibold text-gray-800">Regional Blood Bank</h3>
+                                <p class="text-gray-600">789 Hospital Rd, Pune</p>
+                                <p class="text-sm text-green-600">5.2 km away</p>
+                            </div>
+                            <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">Available</span>
+                        </div>
+                        <div class="grid grid-cols-4 gap-2 mb-4">
+                            <div class="bg-red-50 p-2 rounded text-center">
+                                <div class="text-sm font-semibold text-red-600">A+</div>
+                                <div class="text-xs text-gray-600">20 units</div>
+                            </div>
+                            <div class="bg-red-50 p-2 rounded text-center">
+                                <div class="text-sm font-semibold text-red-600">O+</div>
+                                <div class="text-xs text-gray-600">18 units</div>
+                            </div>
+                            <div class="bg-red-50 p-2 rounded text-center">
+                                <div class="text-sm font-semibold text-red-600">B+</div>
+                                <div class="text-xs text-gray-600">10 units</div>
+                            </div>
+                            <div class="bg-red-50 p-2 rounded text-center">
+                                <div class="text-sm font-semibold text-red-600">AB+</div>
+                                <div class="text-xs text-gray-600">7 units</div>
+                            </div>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="openChat('blood-bank', 'Regional Blood Bank')" class="flex-1 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors">
+                                <i class="fas fa-comments mr-2"></i>Chat
+                            </button>
+                            <button class="flex-1 bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors">
+                                <i class="fas fa-phone mr-2"></i>Call
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Health Consultancy Section -->
+        <section id="consultancy" class="section-content hidden">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <h1 class="text-3xl font-bold text-gray-800 mb-8">Health Consultancy</h1>
+                
+                <!-- Specialties Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div class="bg-white p-6 rounded-lg shadow-lg text-center hover-scale cursor-pointer" onclick="filterDoctors('cardiology')">
+                        <div class="bg-red-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-heartbeat text-red-500 text-2xl"></i>
+                        </div>
+                        <h3 class="text-lg font-semibold">Cardiology</h3>
+                        <p class="text-gray-600 text-sm">Heart Specialists</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-lg text-center hover-scale cursor-pointer" onclick="filterDoctors('general')">
+                        <div class="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-user-md text-blue-500 text-2xl"></i>
+                        </div>
+                        <h3 class="text-lg font-semibold">General Medicine</h3>
+                        <p class="text-gray-600 text-sm">Primary Care</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-lg text-center hover-scale cursor-pointer" onclick="filterDoctors('pediatrics')">
+                        <div class="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-baby text-green-500 text-2xl"></i>
+                        </div>
+                        <h3 class="text-lg font-semibold">Pediatrics</h3>
+                        <p class="text-gray-600 text-sm">Child Care</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-lg text-center hover-scale cursor-pointer" onclick="filterDoctors('orthopedics')">
+                        <div class="bg-purple-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-bone text-purple-500 text-2xl"></i>
+                        </div>
+                        <h3 class="text-lg font-semibold">Orthopedics</h3>
+                        <p class="text-gray-600 text-sm">Bone & Joint</p>
+                    </div>
+                </div>
+
+                <!-- Available Doctors -->
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">Available Doctors</h2>
+                    <div class="space-y-4">
+                        <div class="border border-gray-200 rounded-lg p-4 flex items-center justify-between">
+                            <div class="flex items-center">
+                                <img src="https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=100&h=100&fit=crop&crop=face" alt="Doctor" class="w-16 h-16 rounded-full mr-4">
+                                <div>
+                                    <h3 class="text-lg font-semibold">Dr. Sarah Johnson</h3>
+                                    <p class="text-gray-600">Cardiologist • 15 years exp</p>
+                                    <div class="flex items-center mt-1">
+                                        <div class="flex text-yellow-400">
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                        </div>
+                                        <span class="text-sm text-gray-600 ml-2">4.9 (124 reviews)</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">Available</span>
+                                <div class="flex space-x-2">
+                                    <button onclick="openChat('doctor', 'Dr. Sarah Johnson')" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors">
+                                        <i class="fas fa-comments mr-1"></i>Chat
+                                    </button>
+                                    <button onclick="startVideoCall('Dr. Sarah Johnson')" class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors">
+                                        <i class="fas fa-video mr-1"></i>Video
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="border border-gray-200 rounded-lg p-4 flex items-center justify-between">
+                            <div class="flex items-center">
+                                <img src="https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=100&h=100&fit=crop&crop=face" alt="Doctor" class="w-16 h-16 rounded-full mr-4">
+                                <div>
+                                    <h3 class="text-lg font-semibold">Dr. Michael Chen</h3>
+                                    <p class="text-gray-600">General Physician • 12 years exp</p>
+                                    <div class="flex items-center mt-1">
+                                        <div class="flex text-yellow-400">
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                            <i class="far fa-star"></i>
+                                        </div>
+                                        <span class="text-sm text-gray-600 ml-2">4.7 (89 reviews)</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <span class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm">Busy</span>
+                                <div class="flex space-x-2">
+                                    <button onclick="openChat('doctor', 'Dr. Michael Chen')" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors">
+                                        <i class="fas fa-comments mr-1"></i>Chat
+                                    </button>
+                                    <button class="bg-gray-400 text-white px-4 py-2 rounded-lg cursor-not-allowed">
+                                        <i class="fas fa-video mr-1"></i>Video
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="border border-gray-200 rounded-lg p-4 flex items-center justify-between">
+                            <div class="flex items-center">
+                                <img src="https://images.unsplash.com/photo-1594824475052-458ae65ac43d?w=100&h=100&fit=crop&crop=face" alt="Doctor" class="w-16 h-16 rounded-full mr-4">
+                                <div>
+                                    <h3 class="text-lg font-semibold">Dr. Emily Rodriguez</h3>
+                                    <p class="text-gray-600">Pediatrician • 8 years exp</p>
+                                    <div class="flex items-center mt-1">
+                                        <div class="flex text-yellow-400">
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                        </div>
+                                        <span class="text-sm text-gray-600 ml-2">
+                                            <span class="text-sm text-gray-600 ml-2">4.8 (67 reviews)</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">Available</span>
+                                <div class="flex space-x-2">
+                                    <button onclick="openChat('doctor', 'Dr. Emily Rodriguez')" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors">
+                                        <i class="fas fa-comments mr-1"></i>Chat
+                                    </button>
+                                    <button onclick="startVideoCall('Dr. Emily Rodriguez')" class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors">
+                                        <i class="fas fa-video mr-1"></i>Video
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Emergency Section -->
+        <section id="emergency" class="section-content hidden">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <div class="bg-red-50 border-l-4 border-red-400 p-4 mb-8">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-exclamation-triangle text-red-400"></i>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm text-red-700">
+                                For life-threatening emergencies, call 108 immediately. This platform is for urgent medical help and community support.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <h1 class="text-3xl font-bold text-gray-800 mb-8">Emergency Help Center</h1>
+
+                <!-- Emergency Post Form -->
+                <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">Post Emergency Request</h2>
+                    <form onsubmit="postEmergency(event)" class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Emergency Type</label>
+                                <select id="emergency-type" class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                                    <option>Blood Needed Urgently</option>
+                                    <option>Medical Emergency</option>
+                                    <option>Transport Needed</option>
+                                    <option>Medication Required</option>
+                                    <option>Other Help</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Blood Type (if applicable)</label>
+                                <select id="blood-type" class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                                    <option>Not Applicable</option>
+                                    <option>A+</option>
+                                    <option>A-</option>
+                                    <option>B+</option>
+                                    <option>B-</option>
+                                    <option>O+</option>
+                                    <option>O-</option>
+                                    <option>AB+</option>
+                                    <option>AB-</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Location/Hospital</label>
+                            <input type="text" id="location" placeholder="Enter hospital name or address" class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                            <textarea id="description" rows="3" placeholder="Describe your emergency situation..." class="w-full border border-gray-300 rounded-lg px-3 py-2"></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Contact Number</label>
+                            <input type="tel" id="contact" placeholder="Your phone number" class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                        </div>
+                        <button type="submit" class="w-full bg-red-500 text-white py-3 rounded-lg hover:bg-red-600 transition-colors font-semibold">
+                            <i class="fas fa-broadcast-tower mr-2"></i>Post Emergency Alert
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Recent Emergency Posts -->
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">Recent Emergency Requests</h2>
+                    <div id="emergency-posts" class="space-y-4">
+                        <div class="border-l-4 border-red-400 bg-red-50 p-4 rounded">
+                            <div class="flex justify-between items-start mb-2">
+                                <div class="flex items-center">
+                                    <span class="bg-red-500 text-white px-2 py-1 rounded-full text-xs mr-2">URGENT</span>
+                                    <h3 class="font-semibold text-red-700">Blood Needed - O+ Type</h3>
+                                </div>
+                                <span class="text-xs text-gray-500">5 mins ago</span>
+                            </div>
+                            <p class="text-gray-700 mb-2">Patient needs O+ blood urgently at Sassoon Hospital, Pune. Surgery scheduled in 2 hours.</p>
+                            <p class="text-sm text-gray-600 mb-3">Contact: +91 9876543210 | Location: Sassoon Hospital, Pune</p>
+                            <div class="flex space-x-2">
+                                <button onclick="openChat('emergency', 'Blood Emergency O+')" class="bg-blue-500 text-white px-4 py-2 rounded text-sm hover:bg-blue-600">
+                                    <i class="fas fa-comments mr-1"></i>Chat to Help
+                                </button>
+                                <button class="bg-green-500 text-white px-4 py-2 rounded text-sm hover:bg-green-600">
+                                    <i class="fas fa-phone mr-1"></i>Call
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="border-l-4 border-orange-400 bg-orange-50 p-4 rounded">
+                            <div class="flex justify-between items-start mb-2">
+                                <div class="flex items-center">
+                                    <span class="bg-orange-500 text-white px-2 py-1 rounded-full text-xs mr-2">HELP</span>
+                                    <h3 class="font-semibold text-orange-700">Transport Needed</h3>
+                                </div>
+                                <span class="text-xs text-gray-500">15 mins ago</span>
+                            </div>
+                            <p class="text-gray-700 mb-2">Need urgent transport for elderly patient from Kothrud to Ruby Hall Clinic.</p>
+                            <p class="text-sm text-gray-600 mb-3">Contact: +91 9876543211 | From: Kothrud to Ruby Hall</p>
+                            <div class="flex space-x-2">
+                                <button onclick="openChat('emergency', 'Transport Help')" class="bg-blue-500 text-white px-4 py-2 rounded text-sm hover:bg-blue-600">
+                                    <i class="fas fa-comments mr-1"></i>Chat to Help
+                                </button>
+                                <button class="bg-green-500 text-white px-4 py-2 rounded text-sm hover:bg-green-600">
+                                    <i class="fas fa-phone mr-1"></i>Call
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Community Section -->
+        <section id="community" class="section-content hidden">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <h1 class="text-3xl font-bold text-gray-800 mb-8">Community Support</h1>
+
+                <!-- Create Post -->
+                <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">Share with Community</h2>
+                    <form onsubmit="createCommunityPost(event)" class="space-y-4">
+                        <div>
+                            <select id="post-category" class="w-full border border-gray-300 rounded-lg px-3 py-2 mb-3">
+                                <option>General Help</option>
+                                <option>Blood Donation</option>
+                                <option>Medical Advice</option>
+                                <option>Transport Help</option>
+                                <option>Medication Share</option>
+                                <option>Health Tips</option>
+                            </select>
+                        </div>
+                        <div>
+                            <textarea id="post-content" rows="3" placeholder="What would you like to share or ask for help with?" class="w-full border border-gray-300 rounded-lg px-3 py-2"></textarea>
+                        </div>
+                        <button type="submit" class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition-colors">
+                            <i class="fas fa-share mr-2"></i>Post to Community
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Community Feed -->
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h2 class="text-xl font-bold text-gray-800 mb-6">Community Feed</h2>
+                    <div id="community-feed" class="space-y-6">
+                        <div class="border-b border-gray-200 pb-6">
+                            <div class="flex items-start space-x-3">
+                                <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=50&h=50&fit=crop&crop=face" alt="User" class="w-10 h-10 rounded-full">
+                                <div class="flex-1">
+                                    <div class="flex items-center space-x-2 mb-2">
+                                        <h3 class="font-semibold text-gray-800">Rajesh Kumar</h3>
+                                        <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">Blood Donation</span>
+                                        <span class="text-xs text-gray-500">2 hours ago</span>
+                                    </div>
+                                    <p class="text-gray-700 mb-3">I'm a regular O+ donor and available for emergency donations in Pune area. Have donated 15+ times. Feel free to contact me if anyone needs urgent help.</p>
+                                    <div class="flex items-center space-x-4 text-sm text-gray-600">
+                                        <button onclick="openChat('community', 'Rajesh Kumar')" class="hover:text-blue-600">
+                                            <i class="fas fa-comments mr-1"></i>Chat
+                                        </button>
+                                        <button class="hover:text-red-600">
+                                            <i class="fas fa-heart mr-1"></i>Thank (12)
+                                        </button>
+                                        <button class="hover:text-green-600">
+                                            <i class="fas fa-share mr-1"></i>Share
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="border-b border-gray-200 pb-6">
+                            <div class="flex items-start space-x-3">
+                                <img src="https://images.unsplash.com/photo-1494790108755-2616b612b412?w=50&h=50&fit=crop&crop=face" alt="User" class="w-10 h-10 rounded-full">
+                                <div class="flex-1">
+                                    <div class="flex items-center space-x-2 mb-2">
+                                        <h3 class="font-semibold text-gray-800">Priya Sharma</h3>
+                                        <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs">Medical Advice</span>
+                                        <span class="text-xs text-gray-500">4 hours ago</span>
+                                    </div>
+                                    <p class="text-gray-700 mb-3">Does anyone know a good physiotherapist in Kothrud area? My mother needs treatment for knee pain. Looking for recommendations.</p>
+                                    <div class="bg-gray-50 p-3 rounded-lg mb-3">
+                                        <div class="flex items-start space-x-2">
+                                            <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=30&h=30&fit=crop&crop=face" alt="User" class="w-6 h-6 rounded-full">
+                                            <div class="flex-1">
+                                                <p class="text-sm text-gray-700"><strong>Dr. Amit Patel:</strong> I'd recommend Dr. Mehta's clinic on FC Road. Very experienced with elderly patients.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center space-x-4 text-sm text-gray-600">
+                                        <button onclick="openChat('community', 'Priya Sharma')" class="hover:text-blue-600">
+                                            <i class="fas fa-comments mr-1"></i>Reply (3)
+                                        </button>
+                                        <button class="hover:text-red-600">
+                                            <i class="fas fa-heart mr-1"></i>Helpful (8)
+                                        </button>
+                                        <button class="hover:text-green-600">
+                                            <i class="fas fa-share mr-1"></i>Share
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="border-b border-gray-200 pb-6">
+                            <div class="flex items-start space-x-3">
+                                <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=50&h=50&fit=crop&crop=face" alt="User" class="w-10 h-10 rounded-full">
+                                <div class="flex-1">
+                                    <div class="flex items-center space-x-2 mb-2">
+                                        <h3 class="font-semibold text-gray-800">Vikram Singh</h3>
+                                        <span class="bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs">Health Tips</span>
+                                        <span class="text-xs text-gray-500">6 hours ago</span>
+                                    </div>
+                                    <p class="text-gray-700 mb-3">Sharing some monsoon health tips: Stay hydrated, avoid street food, keep surroundings clean to prevent dengue. Stay safe everyone! 💙</p>
+                                    <div class="flex items-center space-x-4 text-sm text-gray-600">
+                                        <button onclick="openChat('community', 'Vikram Singh')" class="hover:text-blue-600">
+                                            <i class="fas fa-comments mr-1"></i>Chat
+                                        </button>
+                                        <button class="hover:text-red-600">
+                                            <i class="fas fa-heart mr-1"></i>Helpful (25)
+                                        </button>
+                                        <button class="hover:text-green-600">
+                                            <i class="fas fa-share mr-1"></i>Share
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Chat Modal -->
+    <div id="chat-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
+        <div class="fixed bottom-0 right-0 w-full md:w-96 h-96 bg-white rounded-t-lg md:rounded-lg md:m-4 flex flex-col">
+            <div class="bg-blue-500 text-white p-4 rounded-t-lg flex justify-between items-center">
+                <div>
+                    <h3 id="chat-title" class="font-semibold">Chat</h3>
+                    <p id="chat-subtitle" class="text-sm opacity-90">Online</p>
+                </div>
+                <button onclick="closeChat()" class="text-white hover:text-gray-200">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="chat-messages" class="flex-1 p-4 overflow-y-auto space-y-3">
+                <!-- Chat messages will be populated here -->
+            </div>
+            <div class="p-4 border-t">
+                <div class="flex space-x-2">
+                    <input type="text" id="chat-input" placeholder="Type your message..." class="flex-1 border border-gray-300 rounded-lg px-3 py-2" onkeypress="handleChatKeyPress(event)">
+                    <button onclick="sendMessage()" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Video Call Modal -->
+    <div id="video-modal" class="fixed inset-0 bg-black bg-opacity-90 z-50 hidden">
+        <div class="flex items-center justify-center h-full">
+            <div class="bg-gray-900 rounded-lg p-6 w-full max-w-4xl">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 id="video-title" class="text-white text-xl font-semibold">Video Consultation</h3>
+                    <button onclick="endVideoCall()" class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600">
+                        <i class="fas fa-phone-slash mr-2"></i>End Call
+                    </button>
+                </div>
+                <div class="bg-gray-800 rounded-lg h-96 flex items-center justify-center">
+                    <div class="text-center text-white">
+                        <i class="fas fa-video text-6xl mb-4 opacity-50"></i>
+                        <p class="text-lg">Video call would start here</p>
+                        <p class="text-sm opacity-75">Camera and microphone integration required</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- //medical tracker -->
+      <section id="Medicine Tracker" class="section-content hidden">
+    <!-- Hero Section -->
+    <section class="relative min-h-screen gradient-bg flex items-center justify-center px-4">
+        <!-- Animated background elements -->
+        <div class="absolute inset-0 overflow-hidden">
+            <div class="absolute top-20 left-10 w-72 h-72 bg-white/10 rounded-full blur-3xl animate-float"></div>
+            <div class="absolute bottom-20 right-10 w-96 h-96 bg-primary/20 rounded-full blur-3xl animate-float" style="animation-delay: -3s;"></div>
+            <div class="absolute top-1/2 left-1/2 w-64 h-64 bg-accent/10 rounded-full blur-3xl animate-float" style="animation-delay: -1.5s;"></div>
+        </div>
+
+        <div class="relative z-10 max-w-6xl mx-auto text-center">
+            <!-- Main Headline -->
+            <div class="mb-8 animate-slide-up">
+                <h1 class="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
+                    Find Medicine
+                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent">Instantly</span>
+                </h1>
+                <p class="text-xl md:text-2xl text-gray-200 mb-8 max-w-3xl mx-auto">
+                    <strong>Tired of going from one pharmacy to another?</strong> Our real-time Medicine Tracker helps you check availability at nearby medical stores—quick, easy, and hassle-free.
+                </p>
+            </div>
+
+            <!-- Search Bar -->
+            <div class="mb-12 animate-slide-up" style="animation-delay: 0.2s;">
+                <div class="glass rounded-2xl p-6 max-w-2xl mx-auto">
+                    <div class="flex flex-col md:flex-row gap-4">
+                        <input 
+                            type="text" 
+                            placeholder="Enter medicine name..."
+                            class="flex-1 px-6 py-4 rounded-xl border-0 focus:ring-4 focus:ring-primary/50 text-lg"
+                            id="medicineSearch"
+                        >
+                        <button 
+                            onclick="searchMedicine()"
+                            class="px-8 py-4 bg-primary hover:bg-primary/90 text-white font-semibold rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-xl"
+                        >
+                            🔍 Search Now
+                        </button>
+                    </div>
+                    <button 
+                        onclick="getLocation()"
+                        class="mt-4 text-white/80 hover:text-white transition-colors duration-300"
+                    >
+                        📍 Use my location for better results
+                    </button>
+                </div>
+            </div>
+
+            <!-- CTA Buttons -->
+            <div class="flex flex-col md:flex-row gap-6 justify-center items-center animate-slide-up" style="animation-delay: 0.4s;">
+                <button 
+                    onclick="startTracking()"
+                    class="px-10 py-5 bg-primary hover:bg-primary/90 text-white text-xl font-bold rounded-2xl transition-all duration-300 hover:scale-110 animate-pulse-glow shadow-2xl"
+                >
+                    👉 Start Tracking Now
+                </button>
+                <button 
+                    onclick="checkAvailability()"
+                    class="px-10 py-5 bg-white/20 hover:bg-white/30 text-white text-xl font-bold rounded-2xl backdrop-blur-sm border border-white/30 transition-all duration-300 hover:scale-105"
+                >
+                    👉 Check Availability
+                </button>
+            </div>
+
+            <!-- Live Demo Stats -->
+            <div class="mt-16 grid grid-cols-2 md:grid-cols-4 gap-6 animate-slide-up" style="animation-delay: 0.6s;">
+                <div class="glass rounded-xl p-4">
+                    <div class="text-3xl font-bold text-primary" id="pharmaciesCount">2,500+</div>
+                    <div class="text-white/80">Partner Pharmacies</div>
+                </div>
+                <div class="glass rounded-xl p-4">
+                    <div class="text-3xl font-bold text-accent" id="medicinesCount">50,000+</div>
+                    <div class="text-white/80">Medicines Tracked</div>
+                </div>
+                <div class="glass rounded-xl p-4">
+                    <div class="text-3xl font-bold text-yellow-400" id="searchesCount">1M+</div>
+                    <div class="text-white/80">Daily Searches</div>
+                </div>
+                <div class="glass rounded-xl p-4">
+                    <div class="text-3xl font-bold text-green-400" id="successRate">98%</div>
+                    <div class="text-white/80">Success Rate</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="py-20 bg-white ">
+        <div class="max-w-6xl mx-auto px-4">
+            <h2 class="text-4xl md:text-5xl font-bold text-center mb-16 text-gray-800">
+                Why Choose Our <span class="text-primary">Medicine Tracker?</span>
+            </h2>
+            
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="bg-gradient-to-br from-primary/10 to-primary/5 p-8 rounded-2xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-2">
+                    <div class="text-4xl mb-4">⚡</div>
+                    <h3 class="text-2xl font-bold mb-4 text-gray-800">Real-Time Updates</h3>
+                    <p class="text-gray-600">Get live stock information updated every minute. No more wasted trips to empty shelves.</p>
+                </div>
+                
+                <div class="bg-gradient-to-br from-secondary/10 to-secondary/5 p-8 rounded-2xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-2">
+                    <div class="text-4xl mb-4">📍</div>
+                    <h3 class="text-2xl font-bold mb-4 text-gray-800">Location-Based Search</h3>
+                    <p class="text-gray-600">Find the nearest pharmacies with your required medicine in stock. Distance and directions included.</p>
+                </div>
+                
+                <div class="bg-gradient-to-br from-accent/10 to-accent/5 p-8 rounded-2xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-2">
+                    <div class="text-4xl mb-4">🔒</div>
+                    <h3 class="text-2xl font-bold mb-4 text-gray-800">Reserve & Hold</h3>
+                    <p class="text-gray-600">Reserve your medicine for up to 24 hours. No more "just sold out" disappointments.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Live Search Results -->
+    <section class="py-20 bg-gray-50" id="searchResults" style="display: none;">
+        <div class="max-w-7xl mx-auto px-4">
+            <h3 class="text-3xl font-bold mb-8 text-center text-gray-800">Search Results</h3>
+            
+            <!-- Toggle View Buttons -->
+            <div class="flex justify-center mb-6">
+                <div class="bg-white rounded-xl p-1 shadow-lg">
+                    <button onclick="toggleView('list')" id="listViewBtn" class="px-6 py-2 rounded-lg bg-primary text-white font-semibold transition-all">
+                        📋 List View
+                    </button>
+                    <button onclick="toggleView('map')" id="mapViewBtn" class="px-6 py-2 rounded-lg text-gray-600 hover:bg-gray-100 font-semibold transition-all">
+                        🗺️ Map View
+                    </button>
+                </div>
+            </div>
+
+            <!-- Results Container -->
+            <div class="grid lg:grid-cols-2 gap-8">
+                <!-- List Results -->
+                <div id="listResults" class="space-y-4">
+                    <!-- Results will be populated here -->
+                </div>
+                
+                <!-- Map Container -->
+                <div id="mapContainer" class="hidden lg:block">
+                    <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                        <div class="p-4 bg-gradient-to-r from-primary to-secondary text-white">
+                            <h4 class="font-bold text-lg">📍 Pharmacy Locations</h4>
+                            <p class="text-sm opacity-90">Click markers for details</p>
+                        </div>
+                        <div id="map" style="height: 500px; width: 100%;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mobile Map (Full Width) -->
+            <div id="mobileMapContainer" class="lg:hidden mt-8" style="display: none;">
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                    <div class="p-4 bg-gradient-to-r from-primary to-secondary text-white">
+                        <h4 class="font-bold text-lg">📍 Pharmacy Locations</h4>
+                        <p class="text-sm opacity-90">Click markers for details</p>
+                    </div>
+                    <div id="mobileMap" style="height: 400px; width: 100%;"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+   
+
+  
+</section>
+    
+
+    <script>
+         
+        // Sample pharmacy data with coordinates
+        const pharmacies = [
+            { 
+                id: 1,
+                name: "Apollo Pharmacy", 
+                distance: "0.5 km", 
+                stock: "In Stock", 
+                address: "MG Road, Brigade Road", 
+                phone: "+91-9876543210", 
+                price: "₹45",
+                lat: 12.9716,
+                lng: 77.5946,
+                rating: 4.5,
+                timing: "24/7"
+            },
+            { 
+                id: 2,
+                name: "MedPlus", 
+                distance: "1.2 km", 
+                stock: "Low Stock (3 left)", 
+                address: "Brigade Road, Bengaluru", 
+                phone: "+91-9876543211", 
+                price: "₹42",
+                lat: 12.9698,
+                lng: 77.6124,
+                rating: 4.2,
+                timing: "8 AM - 10 PM"
+            },
+            { 
+                id: 3,
+                name: "Guardian Pharmacy", 
+                distance: "2.1 km", 
+                stock: "In Stock", 
+                address: "Commercial Street", 
+                phone: "+91-9876543212", 
+                price: "₹48",
+                lat: 12.9833,
+                lng: 77.6089,
+                rating: 4.7,
+                timing: "9 AM - 9 PM"
+            },
+            { 
+                id: 4,
+                name: "Wellness Pharmacy", 
+                distance: "0.8 km", 
+                stock: "In Stock", 
+                address: "Koramangala 5th Block", 
+                phone: "+91-9876543213", 
+                price: "₹44",
+                lat: 12.9352,
+                lng: 77.6245,
+                rating: 4.3,
+                timing: "7 AM - 11 PM"
+            },
+            { 
+                id: 5,
+                name: "HealthBuddy", 
+                distance: "1.5 km", 
+                stock: "Out of Stock", 
+                address: "Indiranagar", 
+                phone: "+91-9876543214", 
+                price: "₹46",
+                lat: 12.9719,
+                lng: 77.6412,
+                rating: 4.1,
+                timing: "24/7"
+            }
+        ];
+
+        let map;
+        let mobileMap;
+        let markers = [];
+        let userLocation = { lat: 12.9716, lng: 77.5946 }; // Default to Bangalore center
+        let currentView = 'list';
+
+        // Animate counters on page load
+        function animateCounters() {
+            const counters = [
+                { id: 'pharmaciesCount', target: 2500, suffix: '+' },
+                { id: 'medicinesCount', target: 50000, suffix: '+' },
+                { id: 'searchesCount', target: 1000000, suffix: '+', format: 'M' },
+                { id: 'successRate', target: 98, suffix: '%' }
+            ];
+
+            counters.forEach(counter => {
+                let current = 0;
+                const increment = counter.target / 100;
+                const timer = setInterval(() => {
+                    current += increment;
+                    if (current >= counter.target) {
+                        current = counter.target;
+                        clearInterval(timer);
+                    }
+                    
+                    let displayValue = Math.floor(current);
+                    if (counter.format === 'M' && displayValue >= 1000000) {
+                        displayValue = Math.floor(displayValue / 1000000) + 'M';
+                    } else if (displayValue >= 1000) {
+                        displayValue = Math.floor(displayValue / 1000) + 'K';
+                    }
+                    
+                    document.getElementById(counter.id).textContent = displayValue + counter.suffix;
+                }, 20);
+            });
+        }
+
+        function initMap() {
+            // Initialize desktop map
+            if (!map) {
+                map = L.map('map').setView([userLocation.lat, userLocation.lng], 13);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap contributors'
+                }).addTo(map);
+
+                // Add user location marker
+                L.marker([userLocation.lat, userLocation.lng])
+                    .addTo(map)
+                    .bindPopup('<b>📍 Your Location</b>')
+                    .openPopup();
+            }
+
+            // Initialize mobile map
+            if (!mobileMap) {
+                mobileMap = L.map('mobileMap').setView([userLocation.lat, userLocation.lng], 13);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap contributors'
+                }).addTo(mobileMap);
+
+                // Add user location marker
+                L.marker([userLocation.lat, userLocation.lng])
+                    .addTo(mobileMap)
+                    .bindPopup('<b>📍 Your Location</b>')
+                    .openPopup();
+            }
+        }
+
+        function addPharmacyMarkers(medicine) {
+            // Clear existing markers
+            markers.forEach(marker => {
+                if (map) map.removeLayer(marker);
+                if (mobileMap) mobileMap.removeLayer(marker);
+            });
+            markers = [];
+
+            pharmacies.forEach(pharmacy => {
+                // Choose marker color based on stock
+                let markerColor = 'green';
+                let markerIcon = '🏥';
+                
+                if (pharmacy.stock === 'Out of Stock') {
+                    markerColor = 'red';
+                    markerIcon = '❌';
+                } else if (pharmacy.stock.includes('Low')) {
+                    markerColor = 'orange';
+                    markerIcon = '⚠️';
+                }
+
+                // Create custom HTML for popup
+                const popupContent = `
+                    <div class="p-2">
+                        <h4 class="font-bold text-lg mb-2">${pharmacy.name}</h4>
+                        <p class="text-sm text-gray-600 mb-1">📍 ${pharmacy.address}</p>
+                        <p class="text-sm text-gray-600 mb-1">📞 ${pharmacy.phone}</p>
+                        <p class="text-sm text-gray-600 mb-2">🕒 ${pharmacy.timing}</p>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="px-2 py-1 rounded text-xs font-semibold ${pharmacy.stock === 'Out of Stock' ? 'bg-red-100 text-red-800' : pharmacy.stock.includes('Low') ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}">
+                                ${pharmacy.stock}
+                            </span>
+                            <span class="font-bold text-primary">${pharmacy.price}</span>
+                        </div>
+                        <div class="flex items-center mb-3">
+                            <span class="text-yellow-500">${'★'.repeat(Math.floor(pharmacy.rating))}${'☆'.repeat(5-Math.floor(pharmacy.rating))}</span>
+                            <span class="text-xs text-gray-600 ml-1">(${pharmacy.rating})</span>
+                        </div>
+                        <div class="flex space-x-2">
+                            ${pharmacy.stock !== 'Out of Stock' ? `
+                                <button onclick="reserveMedicine('${pharmacy.name}', '${medicine || 'Medicine'}')" class="px-3 py-1 bg-primary text-white text-xs rounded hover:bg-primary/90">
+                                    Reserve
+                                </button>
+                            ` : ''}
+                            <button onclick="getDirections(${pharmacy.lat}, ${pharmacy.lng}, '${pharmacy.name}')" class="px-3 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600">
+                                Directions
+                            </button>
+                            <button onclick="callPharmacy('${pharmacy.phone}')" class="px-3 py-1 bg-green-500 text-white text-xs rounded hover:bg-green-600">
+                                Call
+                            </button>
+                        </div>
+                    </div>
+                `;
+
+                // Create marker for desktop map
+                if (map) {
+                    const marker = L.marker([pharmacy.lat, pharmacy.lng])
+                        .addTo(map)
+                        .bindPopup(popupContent);
+                    markers.push(marker);
+                }
+
+                // Create marker for mobile map
+                if (mobileMap) {
+                    const mobileMarker = L.marker([pharmacy.lat, pharmacy.lng])
+                        .addTo(mobileMap)
+                        .bindPopup(popupContent);
+                    markers.push(mobileMarker);
+                }
+            });
+
+            // Fit map to show all markers
+            if (markers.length > 0) {
+                const group = new L.featureGroup(markers);
+                if (map) map.fitBounds(group.getBounds().pad(0.1));
+                if (mobileMap) mobileMap.fitBounds(group.getBounds().pad(0.1));
+            }
+        }
+
+        function toggleView(view) {
+            currentView = view;
+            const listBtn = document.getElementById('listViewBtn');
+            const mapBtn = document.getElementById('mapViewBtn');
+            const mobileMapContainer = document.getElementById('mobileMapContainer');
+
+            if (view === 'list') {
+                listBtn.className = 'px-6 py-2 rounded-lg bg-primary text-white font-semibold transition-all';
+                mapBtn.className = 'px-6 py-2 rounded-lg text-gray-600 hover:bg-gray-100 font-semibold transition-all';
+                mobileMapContainer.style.display = 'none';
+            } else {
+                listBtn.className = 'px-6 py-2 rounded-lg text-gray-600 hover:bg-gray-100 font-semibold transition-all';
+                mapBtn.className = 'px-6 py-2 rounded-lg bg-primary text-white font-semibold transition-all';
+                mobileMapContainer.style.display = 'block';
+                
+                // Initialize mobile map if not already done
+                setTimeout(() => {
+                    if (!mobileMap) {
+                        initMap();
+                        addPharmacyMarkers();
+                    }
+                    mobileMap.invalidateSize();
+                }, 100);
+            }
+        }
+
+        function searchMedicine() {
+            const searchTerm = document.getElementById('medicineSearch').value;
+            if (!searchTerm.trim()) {
+                alert('Please enter a medicine name');
+                return;
+            }
+
+            // Show loading
+            showSearchResults();
+            
+            // Simulate API call delay
+            setTimeout(() => {
+                displayResults(searchTerm);
+                initMap();
+                addPharmacyMarkers(searchTerm);
+            }, 1000);
+        }
+
+        function showSearchResults() {
+            document.getElementById('searchResults').style.display = 'block';
+            document.getElementById('listResults').innerHTML = `
+                <div class="text-center py-8">
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+                    <p class="mt-4 text-gray-600">Searching nearby pharmacies...</p>
+                </div>
+            `;
+            
+            // Smooth scroll to results
+            document.getElementById('searchResults').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function displayResults(medicine) {
+            const resultsHtml = pharmacies.map(pharmacy => `
+                <div class="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border-l-4 ${pharmacy.stock === 'Out of Stock' ? 'border-red-500' : pharmacy.stock.includes('Low') ? 'border-yellow-500' : 'border-green-500'}">
+                    <div class="flex flex-col">
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="flex-1">
+                                <h4 class="text-xl font-bold text-gray-800 mb-1">${pharmacy.name}</h4>
+                                <div class="flex items-center mb-2">
+                                    <span class="text-yellow-500 text-sm">${'★'.repeat(Math.floor(pharmacy.rating))}${'☆'.repeat(5-Math.floor(pharmacy.rating))}</span>
+                                    <span class="text-xs text-gray-600 ml-1">(${pharmacy.rating})</span>
+                                    <span class="mx-2 text-gray-300">•</span>
+                                    <span class="text-xs text-gray-600">${pharmacy.timing}</span>
+                                </div>
+                            </div>
+                            <span class="text-lg font-bold text-primary">${pharmacy.price}</span>
+                        </div>
+                        
+                        <p class="text-gray-600 mb-1">📍 ${pharmacy.address} • ${pharmacy.distance}</p>
+                        <p class="text-gray-600 mb-3">📞 ${pharmacy.phone}</p>
+                        
+                        <div class="flex items-center justify-between">
+                            <span class="px-3 py-1 rounded-full text-sm font-semibold ${pharmacy.stock === 'Out of Stock' ? 'bg-red-100 text-red-800' : pharmacy.stock.includes('Low') ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}">
+                                ${pharmacy.stock}
+                            </span>
+                            
+                            <div class="flex space-x-2">
+                                ${pharmacy.stock !== 'Out of Stock' ? `
+                                    <button onclick="reserveMedicine('${pharmacy.name}', '${medicine}')" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors text-sm">
+                                        🔒 Reserve
+                                    </button>
+                                ` : ''}
+                                <button onclick="getDirections(${pharmacy.lat}, ${pharmacy.lng}, '${pharmacy.name}')" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm">
+                                    🗺️ Directions
+                                </button>
+                                <button onclick="callPharmacy('${pharmacy.phone}')" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm">
+                                    📞 Call
+                                </button>
+                                <button onclick="focusOnPharmacy(${pharmacy.lat}, ${pharmacy.lng})" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors text-sm">
+                                    📍 Show on Map
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            document.getElementById('listResults').innerHTML = `
+                <div class="mb-6 p-4 bg-blue-50 rounded-lg">
+                    <h4 class="font-semibold text-blue-800">Found ${pharmacies.filter(p => p.stock !== 'Out of Stock').length} pharmacies with "${medicine}" in stock</h4>
+                    <p class="text-sm text-blue-600 mt-1">Sorted by distance from your location</p>
+                </div>
+                ${resultsHtml}
+            `;
+        }
+
+        function focusOnPharmacy(lat, lng) {
+            if (window.innerWidth >= 1024) {
+                // Desktop - focus on main map
+                if (map) {
+                    map.setView([lat, lng], 16);
+                    // Find and open the popup for this location
+                    markers.forEach(marker => {
+                        if (marker.getLatLng().lat === lat && marker.getLatLng().lng === lng) {
+                            marker.openPopup();
+                        }
+                    });
+                }
+            } else {
+                // Mobile - switch to map view and focus
+                toggleView('map');
+                setTimeout(() => {
+                    if (mobileMap) {
+                        mobileMap.setView([lat, lng], 16);
+                        markers.forEach(marker => {
+                            if (marker.getLatLng().lat === lat && marker.getLatLng().lng === lng) {
+                                marker.openPopup();
+                            }
+                        });
+                    }
+                }, 200);
+            }
+        }
+
+        function reserveMedicine(pharmacy, medicine) {
+            const reservationId = Math.random().toString(36).substr(2, 9).toUpperCase();
+            alert(`✅ Medicine Reserved Successfully!\n\n🏥 Pharmacy: ${pharmacy}\n💊 Medicine: ${medicine}\n🔢 Reservation ID: #${reservationId}\n⏰ Valid for: 24 hours\n\n📱 You'll receive SMS confirmation shortly.`);
+        }
+
+        function getDirections(lat, lng, name) {
+            // Create directions URL (works on both mobile and desktop)
+            const directionsUrl = `https://www.google.com/maps/dir/${userLocation.lat},${userLocation.lng}/${lat},${lng}`;
+            
+            if (confirm(`Open directions to ${name} in Google Maps?`)) {
+                window.open(directionsUrl, '_blank');
+            }
+        }
+
+        function callPharmacy(phone) {
+            if (confirm(`Call ${phone}?`)) {
+                window.open(`tel:${phone}`);
+            }
+        }
+
+        function getLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        userLocation = {
+                            lat: position.coords.latitude,
+                            lng: position.coords.longitude
+                        };
+                        
+                        alert(`📍 Location Updated!\nLat: ${position.coords.latitude.toFixed(4)}\nLng: ${position.coords.longitude.toFixed(4)}\n\nSearch results will now show pharmacies near you.`);
+                        
+                        // Update maps if they exist
+                        if (map) {
+                            map.setView([userLocation.lat, userLocation.lng], 13);
+                        }
+                        if (mobileMap) {
+                            mobileMap.setView([userLocation.lat, userLocation.lng], 13);
+                        }
+                    },
+                    (error) => {
+                        alert('Location access denied. Using default location (Bangalore, India).');
+                    }
+                );
+            } else {
+                alert('Geolocation not supported by this browser.');
+            }
+        }
+
+        function startTracking() {
+            alert('🎉 Welcome to Medicine Tracker!\n\n✨ Features:\n• Real-time stock updates\n• Interactive map with pharmacy locations\n• One-click reservations\n• GPS directions\n• Direct calling\n\n👆 Start by searching for any medicine above!');
+        }
+
+        function checkAvailability() {
+            document.getElementById('medicineSearch').focus();
+            document.getElementById('medicineSearch').placeholder = 'Type medicine name here...';
+        }
+
+        // Initialize animations when page loads
+        window.addEventListener('load', () => {
+            setTimeout(animateCounters, 500);
+        });
+
+        // Add some interactivity to search input
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('medicineSearch');
+            searchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    searchMedicine();
+                }
+            });
+        });
+
+        // Handle window resize for map
+        window.addEventListener('resize', function() {
+            setTimeout(() => {
+                if (map) map.invalidateSize();
+                if (mobileMap) mobileMap.invalidateSize();
+            }, 100);
+        });
+
+
+        function startTracking() {
+            alert('🎉 Welcome to Medicine Tracker! \n\nStart by searching for any medicine above. We\'ll show you real-time availability at nearby pharmacies.');
+        }
+
+        function checkAvailability() {
+            document.getElementById('medicineSearch').focus();
+            document.getElementById('medicineSearch').placeholder = 'Type medicine name here...';
+        }
+
+        // Initialize animations when page loads
+        window.addEventListener('load', () => {
+            setTimeout(animateCounters, 500);
+        });
+
+        // Add some interactivity to search input
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('medicineSearch');
+            searchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    searchMedicine();
+                }
+            });
+        });
+ 
+        // JavaScript functionality
+        let currentChat = null;
+        
+        // Show/Hide sections
+        function showSection(sectionId) {
+            // Hide all sections
+            document.querySelectorAll('.section-content').forEach(section => {
+                section.classList.add('hidden');
+            });
+            
+            // Show selected section
+            document.getElementById(sectionId).classList.remove('hidden');
+            
+            // Close mobile menu if open
+            document.getElementById('mobile-menu').classList.add('hidden');
+        }
+
+        // Mobile menu toggle
+        function toggleMobileMenu() {
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenu.classList.toggle('hidden');
+        }
+
+        // Filter doctors by specialty
+        function filterDoctors(specialty) {
+            // This would filter the doctors list based on specialty
+            console.log('Filtering doctors by:', specialty);
+        }
+
+        // Open chat modal
+        function openChat(type, name) {
+            currentChat = { type, name };
+            document.getElementById('chat-title').textContent = name;
+            document.getElementById('chat-subtitle').textContent = getStatusText(type);
+            document.getElementById('chat-modal').classList.remove('hidden');
+            
+            // Load chat history (simulate)
+            loadChatHistory(type, name);
+        }
+
+        // Close chat modal
+        function closeChat() {
+            document.getElementById('chat-modal').classList.add('hidden');
+            currentChat = null;
+        }
+
+        // Get status text based on chat type
+        function getStatusText(type) {
+            const statusMap = {
+                'blood-bank': 'Blood Bank • Online',
+                'doctor': 'Doctor • Available',
+                'emergency': 'Emergency Contact • Active',
+                'community': 'Community Member • Online'
+            };
+            return statusMap[type] || 'Online';
+        }
+
+        // Load chat history
+        function loadChatHistory(type, name) {
+            const chatMessages = document.getElementById('chat-messages');
+            chatMessages.innerHTML = '';
+            
+            // Simulate different chat histories based on type
+            const messages = getChatMessages(type, name);
+            messages.forEach(msg => {
+                addChatMessage(msg.sender, msg.message, msg.isUser);
+            });
+        }
+
+        // Get sample chat messages
+        function getChatMessages(type, name) {
+            const messageMap = {
+                'blood-bank': [
+                    { sender: name, message: 'Hello! How can I help you today?', isUser: false },
+                    { sender: 'You', message: 'Do you have B+ blood available?', isUser: true },
+                    { sender: name, message: 'Yes, we currently have 8 units of B+ available. Do you need it urgently?', isUser: false }
+                ],
+                'doctor': [
+                    { sender: name, message: 'Good day! I\'m here to help with your health concerns.', isUser: false },
+                    { sender: 'You', message: 'I have been having chest pain for the past hour.', isUser: true },
+                    { sender: name, message: 'I understand your concern. Can you describe the pain? Is it sharp, dull, or crushing?', isUser: false }
+                ],
+                'emergency': [
+                    { sender: name, message: 'Thank you for reaching out to help!', isUser: false },
+                    { sender: 'You', message: 'I saw your emergency post. How can I assist?', isUser: true },
+                    { sender: name, message: 'We need O+ blood at Sassoon Hospital immediately. Can you help or know someone who can?', isUser: false }
+                ],
+                'community': [
+                    { sender: name, message: 'Hi there! Thanks for connecting.', isUser: false },
+                    { sender: 'You', message: 'I saw your post about blood donation. That\'s very helpful!', isUser: true },
+                    { sender: name, message: 'Happy to help the community. Are you looking for a donor or want to donate?', isUser: false }
+                ]
+            };
+            return messageMap[type] || [];
+        }
+
+        // Add chat message
+        function addChatMessage(sender, message, isUser) {
+            const chatMessages = document.getElementById('chat-messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `chat-bubble ${isUser ? 'ml-auto bg-blue-500 text-white' : 'bg-gray-100'} p-3 rounded-lg`;
+            messageDiv.innerHTML = `
+                <div class="text-xs ${isUser ? 'text-blue-100' : 'text-gray-500'} mb-1">${sender}</div>
+                <div>${message}</div>
+            `;
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // Send message
+        function sendMessage() {
+            const input = document.getElementById('chat-input');
+            const message = input.value.trim();
+            
+            if (message && currentChat) {
+                addChatMessage('You', message, true);
+                input.value = '';
+                
+                // Simulate response after a delay
+                setTimeout(() => {
+                    const response = generateResponse(currentChat.type, message);
+                    addChatMessage(currentChat.name, response, false);
+                }, 1000);
+            }
+        }
+
+        // Handle chat key press
+        function handleChatKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        // Generate response based on chat type and message
+        function generateResponse(type, message) {
+            const responses = {
+                'blood-bank': [
+                    'Let me check our current inventory for you.',
+                    'Yes, we can arrange that. Please come with proper ID.',
+                    'Our blood bank is open 24/7 for emergencies.'
+                ],
+                'doctor': [
+                    'Based on what you\'ve described, I recommend we schedule a detailed consultation.',
+                    'Please monitor your symptoms and let me know if they worsen.',
+                    'I\'d like to ask a few more questions to better understand your condition.'
+                ],
+                'emergency': [
+                    'I\'m mobilizing help right away. Please stay calm.',
+                    'Can you provide more details about the current situation?',
+                    'Help is on the way. I\'ve contacted nearby volunteers.'
+                ],
+                'community': [
+                    'Thank you for being so supportive of our community!',
+                    'I appreciate your willingness to help others.',
+                    'Let\'s stay connected for future community needs.'
+                ]
+            };
+            
+            const typeResponses = responses[type] || ['Thank you for your message.'];
+            return typeResponses[Math.floor(Math.random() * typeResponses.length)];
+        }
+
+        // Start video call
+        function startVideoCall(doctorName) {
+            document.getElementById('video-title').textContent = `Video Call with ${doctorName}`;
+            document.getElementById('video-modal').classList.remove('hidden');
+        }
+
+        // End video call
+        function endVideoCall() {
+            document.getElementById('video-modal').classList.add('hidden');
+        }
+
+        // Post emergency
+        function postEmergency(event) {
+            event.preventDefault();
+            
+            const type = document.getElementById('emergency-type').value;
+            const bloodType = document.getElementById('blood-type').value;
+            const location = document.getElementById('location').value;
+            const description = document.getElementById('description').value;
+            const contact = document.getElementById('contact').value;
+            
+            if (!location || !description || !contact) {
+                alert('Please fill in all required fields.');
+                return;
+            }
+            
+            // Create new emergency post
+            const emergencyPosts = document.getElementById('emergency-posts');
+            const postDiv = document.createElement('div');
+            postDiv.className = 'border-l-4 border-red-400 bg-red-50 p-4 rounded';
+            
+            const bloodTypeText = bloodType !== 'Not Applicable' ? ` - ${bloodType} Type` : '';
+            
+            postDiv.innerHTML = `
+                <div class="flex justify-between items-start mb-2">
+                    <div class="flex items-center">
+                        <span class="bg-red-500 text-white px-2 py-1 rounded-full text-xs mr-2">NEW</span>
+                        <h3 class="font-semibold text-red-700">${type}${bloodTypeText}</h3>
+                    </div>
+                    <span class="text-xs text-gray-500">Just now</span>
+                </div>
+                <p class="text-gray-700 mb-2">${description}</p>
+                <p class="text-sm text-gray-600 mb-3">Contact: ${contact} | Location: ${location}</p>
+                <div class="flex space-x-2">
+                    <button onclick="openChat('emergency', '${type}')" class="bg-blue-500 text-white px-4 py-2 rounded text-sm hover:bg-blue-600">
+                        <i class="fas fa-comments mr-1"></i>Chat to Help
+                    </button>
+                    <button class="bg-green-500 text-white px-4 py-2 rounded text-sm hover:bg-green-600">
+                        <i class="fas fa-phone mr-1"></i>Call
+                    </button>
+                </div>
+            `;
+            
+            emergencyPosts.insertBefore(postDiv, emergencyPosts.firstChild);
+            
+            // Reset form
+            event.target.reset();
+            
+            alert('Emergency alert posted successfully! Nearby community members have been notified.');
+        }
+
+        // Create community post
+        function createCommunityPost(event) {
+            event.preventDefault();
+            
+            const category = document.getElementById('post-category').value;
+            const content = document.getElementById('post-content').value;
+            
+            if (!content.trim()) {
+                alert('Please enter some content for your post.');
+                return;
+            }
+            
+            // Create new community post
+            const communityFeed = document.getElementById('community-feed');
+            const postDiv = document.createElement('div');
+            postDiv.className = 'border-b border-gray-200 pb-6';
+            
+            const categoryColors = {
+                'General Help': 'bg-blue-100 text-blue-800',
+                'Blood Donation': 'bg-red-100 text-red-800',
+                'Medical Advice': 'bg-green-100 text-green-800',
+                'Transport Help': 'bg-yellow-100 text-yellow-800',
+                'Medication Share': 'bg-purple-100 text-purple-800',
+                'Health Tips': 'bg-indigo-100 text-indigo-800'
+            };
+        }
+            
+            </script>
